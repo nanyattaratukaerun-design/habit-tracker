@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Multi Habit Tracker</title>
+
+    <!-- PWA Setup -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Habits">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/4/4e/Habit_icon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-theme="dark">
+
+    <div id="app">
+        <!-- Header/Top Area -->
+        <header class="app-header">
+            <div class="header-top">
+                <h1 class="header-title">Habit Tracker</h1>
+                <button class="btn-icon" id="add-habit-btn" aria-label="習慣を追加"><i class="fas fa-plus"></i></button>
+            </div>
+
+            <!-- Habit Tabs (Swiper) -->
+            <div class="habit-tabs-container">
+                <div class="swiper habit-tabs-swiper">
+                    <div class="swiper-wrapper" id="habit-tabs-wrapper">
+                        <!-- Tabs will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard (Home) View -->
+            <section id="view-home" class="view-section active">
+                <div class="calendar-header">
+                    <div class="month-selector" style="position: relative;">
+                        <span id="current-month-display">2026年 02月</span>
+                        <i class="fas fa-chevron-down"></i>
+                        <input type="month" id="month-picker"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                    </div>
+                    <div class="month-stats">
+                        累計 <span id="month-total-badge" class="stats-badge">0</span>
+                    </div>
+                </div>
+
+                <div class="calendar-container">
+                    <div class="calendar-grid weekdays">
+                        <div class="weekday sun">日</div>
+                        <div class="weekday">月</div>
+                        <div class="weekday">火</div>
+                        <div class="weekday">水</div>
+                        <div class="weekday">木</div>
+                        <div class="weekday">金</div>
+                        <div class="weekday sat">土</div>
+                    </div>
+                    <div class="calendar-grid days" id="calendar-days">
+                        <!-- Days will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Report View -->
+            <section id="view-report" class="view-section">
+                <h2 class="section-title">レポート</h2>
+                <div id="report-container">
+                    <!-- Reports will be injected here -->
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="view-settings" class="view-section">
+                <h2 class="section-title">設定</h2>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">カスタマイズ</h3>
+
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <div class="settings-item-label">テーマ (背景スタイル)</div>
+                            <div class="settings-item-desc">アプリ全体の見た目を変更します</div>
+                        </div>
+                        <select id="setting-theme" class="settings-select">
+                            <option value="dark">ダーク</option>
+                            <option value="light">ライト</option>
+                            <option value="pastel">パステル</option>
+                            <option value="nordic">北欧風</option>
+                            <option value="cyberpunk">サイバーパンク</option>
+                            <option value="sakura">桜 (和風)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">演出</h3>
+
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <div class="settings-item-label">振動 (Haptic)</div>
+                            <div class="settings-item-desc">チェック時の振動フィードバック</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-haptic">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <div class="settings-item-label">エフェクト</div>
+                            <div class="settings-item-desc">チェック時の画面エフェクト</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-effect-enabled">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-item" id="effect-type-container">
+                        <div class="settings-item-info">
+                            <div class="settings-item-label">エフェクトの種類</div>
+                        </div>
+                        <select id="setting-effect-type" class="settings-select">
+                            <option value="confetti">紙吹雪 (Confetti)</option>
+                            <option value="fireworks">花火 (Fireworks)</option>
+                            <option value="sparkles">キラキラ (Sparkles)</option>
+                            <option value="hearts">ハート (Hearts)</option>
+                            <option value="balloons">風船 (Balloons)</option>
+                            <option value="snow">雪 (Snow)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-group-title">データ</h3>
+                    <div class="settings-item danger">
+                        <div class="settings-item-info">
+                            <div class="settings-item-label">データをすべて削除</div>
+                            <div class="settings-item-desc">記録がすべて消去されます</div>
+                        </div>
+                        <button class="btn-danger" id="btn-clear-data">削除</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-target="view-home">
+                <i class="fas fa-home"></i>
+                <span>ホーム</span>
+            </a>
+            <a href="#" class="nav-item" data-target="view-report">
+                <i class="fas fa-chart-line"></i>
+                <span>レポート</span>
+            </a>
+            <a href="#" class="nav-item" data-target="view-settings">
+                <i class="fas fa-cog"></i>
+                <span>設定</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal for adding habit -->
+    <div id="add-habit-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">新しい習慣を追加</h3>
+            <div class="form-group">
+                <label for="new-habit-name">習慣の名前</label>
+                <input type="text" id="new-habit-name" placeholder="例: ラジオ体操 🤸" autocomplete="off">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btn-cancel-add">キャンセル</button>
+                <button class="btn-primary" id="btn-save-habit">追加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>
