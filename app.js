@@ -1,7 +1,7 @@
 // 初期データ構造
 const DEFAULT_DATA = {
     habits: [
-        { id: 'habit_' + Date.now(), name: 'ラジオ体操 🤸', createdAt: new Date().toISOString() }
+        { id: 'habit_' + Date.now(), name: '無題のカレンダー', createdAt: new Date().toISOString() }
     ],
     records: {},
     settings: {
@@ -81,7 +81,35 @@ function renderHabitTabs() {
             <span class="habit-badge">${monthTotal}</span>
         `;
 
-        slide.addEventListener('click', () => {
+        let pressTimer = null;
+        let isLongPress = false;
+
+        const startPress = () => {
+            isLongPress = false;
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                if (typeof openEditModal === 'function') openEditModal(habit);
+            }, 500); // 500ms length for long press
+        };
+
+        const cancelPress = () => {
+            if (pressTimer) clearTimeout(pressTimer);
+        };
+
+        // Long press events
+        slide.addEventListener('touchstart', startPress, { passive: true });
+        slide.addEventListener('touchend', cancelPress);
+        slide.addEventListener('touchmove', cancelPress);
+        slide.addEventListener('mousedown', startPress);
+        slide.addEventListener('mouseup', cancelPress);
+        slide.addEventListener('mouseleave', cancelPress);
+
+        // Standard click events
+        slide.addEventListener('click', (e) => {
+            if (isLongPress) {
+                e.preventDefault();
+                return;
+            }
             currentHabitId = habit.id;
             updateActiveTab();
             renderCalendar();
@@ -561,6 +589,56 @@ document.getElementById('btn-save-habit').addEventListener('click', () => {
     }
 });
 
+// 編集/削除モーダル
+const editModal = document.getElementById('edit-habit-modal');
+const editInputName = document.getElementById('edit-habit-name');
+let editTargetHabitId = null;
+
+window.openEditModal = function (habit) {
+    if (appData.settings.haptic && navigator.vibrate) navigator.vibrate(50);
+    editTargetHabitId = habit.id;
+    editInputName.value = habit.name;
+    editModal.classList.add('show');
+};
+
+document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+    editModal.classList.remove('show');
+});
+
+document.getElementById('btn-save-edit').addEventListener('click', () => {
+    const name = editInputName.value.trim();
+    if (name && editTargetHabitId) {
+        const habit = appData.habits.find(h => h.id === editTargetHabitId);
+        if (habit) habit.name = name;
+        saveData();
+        renderHabitTabs();
+        renderReport(); // レポートの表示名も更新
+        editModal.classList.remove('show');
+    }
+});
+
+document.getElementById('btn-delete-habit').addEventListener('click', () => {
+    if (appData.habits.length <= 1) {
+        alert('最後のカレンダーは削除できません。\nカレンダーが1つの場合は名前の変更のみ可能です。');
+        return;
+    }
+    if (confirm('このカレンダーと記録を削除しますか？\n元には戻せません。')) {
+        appData.habits = appData.habits.filter(h => h.id !== editTargetHabitId);
+        delete appData.records[editTargetHabitId];
+
+        // 削除したカレンダーを開いていた場合は最初のカレンダーに戻す
+        if (currentHabitId === editTargetHabitId) {
+            currentHabitId = appData.habits[0].id;
+        }
+
+        saveData();
+        renderHabitTabs();
+        renderCalendar();
+        renderReport();
+        editModal.classList.remove('show');
+    }
+});
+
 // 設定のイベントリスナー
 document.getElementById('setting-theme').addEventListener('change', (e) => {
     appData.settings.theme = e.target.value;
@@ -590,7 +668,7 @@ document.getElementById('btn-clear-data').addEventListener('click', () => {
     if (confirm('本当にすべてのデータを削除しますか？この操作は元に戻せません。')) {
         appData = { ...DEFAULT_DATA, records: {} };
         // デフォルトを再度生成（IDが変わるように）
-        appData.habits = [{ id: 'habit_' + Date.now(), name: 'ラジオ体操 🤸', createdAt: new Date().toISOString() }];
+        appData.habits = [{ id: 'habit_' + Date.now(), name: '無題のカレンダー', createdAt: new Date().toISOString() }];
 
         saveData();
         currentHabitId = appData.habits[0].id;

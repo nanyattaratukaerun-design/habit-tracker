@@ -196,6 +196,25 @@
         </div>
     </div>
 
+    <!-- Modal for editing/deleting habit -->
+    <div id="edit-habit-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">習慣を編集</h3>
+            <div class="form-group">
+                <label for="edit-habit-name">習慣の名前</label>
+                <input type="text" id="edit-habit-name" autocomplete="off">
+            </div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button class="btn-danger" id="btn-delete-habit" style="margin-right: auto; padding: 0 16px;"><i
+                        class="fas fa-trash"></i></button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-secondary" id="btn-cancel-edit">キャンセル</button>
+                    <button class="btn-primary" id="btn-save-edit">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
