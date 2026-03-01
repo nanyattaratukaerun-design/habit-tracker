@@ -6,7 +6,6 @@ const DEFAULT_DATA = {
     records: {},
     settings: {
         theme: 'dark',
-        haptic: true,
         effectEnabled: true,
         effectType: 'confetti'
     }
@@ -16,6 +15,8 @@ let appData = { ...DEFAULT_DATA };
 let currentHabitId = null;
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth(); // 0-based
+let reportYear = new Date().getFullYear();
+let reportMonth = new Date().getMonth(); // 0-based
 let swiperInstance = null;
 
 // DOM Elements
@@ -316,10 +317,37 @@ function calculateMaxStreak(habitId) {
     return max;
 }
 
+function calculateMaxStreakInMonth(habitId, year, month) {
+    let max = 0;
+    let current = 0;
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const records = appData.records[habitId] || {};
+
+    for (let i = 1; i <= lastDay; i++) {
+        const str = formatDate(new Date(year, month, i));
+        if (records[str]) {
+            current++;
+            if (current > max) max = current;
+        } else {
+            current = 0;
+        }
+    }
+    return max;
+}
+
 // レポート描画
 function renderReport() {
     const container = document.getElementById('report-container');
     container.innerHTML = '';
+
+    const reportMonthDisplay = document.getElementById('report-month-display');
+    const reportMonthPicker = document.getElementById('report-month-picker');
+    if (reportMonthDisplay) {
+        reportMonthDisplay.textContent = `${reportYear}年 ${String(reportMonth + 1).padStart(2, '0')}月`;
+    }
+    if (reportMonthPicker) {
+        reportMonthPicker.value = `${reportYear}-${String(reportMonth + 1).padStart(2, '0')}`;
+    }
 
     if (appData.habits.length === 0) {
         container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; margin-top: 40px;">習慣を追加してください</p>';
@@ -327,12 +355,25 @@ function renderReport() {
     }
 
     const today = new Date();
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const isCurrentMonth = (reportYear === today.getFullYear() && reportMonth === today.getMonth());
+    const daysInMonth = new Date(reportYear, reportMonth + 1, 0).getDate();
 
     appData.habits.forEach(habit => {
-        const monthTotal = calculateMonthTotal(habit.id, today.getFullYear(), today.getMonth());
-        const currentStreak = calculateStreak(habit.id);
-        const maxStreak = Math.max(currentStreak, calculateMaxStreak(habit.id)); // maxStreakには現在のストリークを含める
+        const monthTotal = calculateMonthTotal(habit.id, reportYear, reportMonth);
+
+        let currentStreakStr = '';
+        let currentStreakLabel = '';
+        if (isCurrentMonth) {
+            const currentStreak = calculateStreak(habit.id);
+            currentStreakLabel = '現在の連続記録';
+            currentStreakStr = `${currentStreak} <span style="font-size:14px;color:var(--text-secondary)">日</span>`;
+        } else {
+            const monthMaxStreak = calculateMaxStreakInMonth(habit.id, reportYear, reportMonth);
+            currentStreakLabel = 'この月の最長連続';
+            currentStreakStr = `${monthMaxStreak} <span style="font-size:14px;color:var(--text-secondary)">日</span>`;
+        }
+
+        const maxStreak = Math.max(calculateStreak(habit.id), calculateMaxStreak(habit.id));
 
         const card = document.createElement('div');
         card.className = 'report-card';
@@ -340,12 +381,12 @@ function renderReport() {
             <div class="report-habit-name">${escapeHtml(habit.name)}</div>
             <div class="report-stats-grid">
                 <div class="report-stat">
-                    <span class="report-stat-label">今月の達成</span>
+                    <span class="report-stat-label">月間達成</span>
                     <span class="report-stat-value highlight">${monthTotal} <span style="font-size:14px;color:var(--text-secondary)">/ ${daysInMonth}日</span></span>
                 </div>
                 <div class="report-stat">
-                    <span class="report-stat-label">現在の連続記録</span>
-                    <span class="report-stat-value">${currentStreak} <span style="font-size:14px;color:var(--text-secondary)">日</span></span>
+                    <span class="report-stat-label">${currentStreakLabel}</span>
+                    <span class="report-stat-value">${currentStreakStr}</span>
                 </div>
                 <div class="report-stat" style="grid-column: span 2;">
                     <span class="report-stat-label">過去最高連続記録</span>
@@ -360,7 +401,6 @@ function renderReport() {
 // 設定描画
 function renderSettings() {
     document.getElementById('setting-theme').value = appData.settings.theme;
-    document.getElementById('setting-haptic').checked = appData.settings.haptic;
     document.getElementById('setting-effect-enabled').checked = appData.settings.effectEnabled;
     document.getElementById('setting-effect-type').value = appData.settings.effectType;
 
@@ -414,14 +454,8 @@ function applyTheme(themeName) {
     metaThemeColor.content = bgColor;
 }
 
-// 演出ロジック (Haptic & エフェクト)
+// 演出ロジック (エフェクト)
 function triggerFeedback() {
-    // 振動
-    if (appData.settings.haptic && navigator.vibrate) {
-        // iOS Safari では navigator.vibrate は非対応のことが多いですが、PWA対応可能な場合やAndroidでは動作します
-        navigator.vibrate(50);
-    }
-
     // エフェクト
     if (appData.settings.effectEnabled) {
         const type = appData.settings.effectType;
@@ -595,7 +629,6 @@ const editInputName = document.getElementById('edit-habit-name');
 let editTargetHabitId = null;
 
 window.openEditModal = function (habit) {
-    if (appData.settings.haptic && navigator.vibrate) navigator.vibrate(50);
     editTargetHabitId = habit.id;
     editInputName.value = habit.name;
     editModal.classList.add('show');
@@ -646,10 +679,6 @@ document.getElementById('setting-theme').addEventListener('change', (e) => {
     saveData();
 });
 
-document.getElementById('setting-haptic').addEventListener('change', (e) => {
-    appData.settings.haptic = e.target.checked;
-    saveData();
-});
 
 document.getElementById('setting-effect-enabled').addEventListener('change', (e) => {
     appData.settings.effectEnabled = e.target.checked;
@@ -722,6 +751,18 @@ if (monthPicker) {
             currentYear = parseInt(year);
             currentMonth = parseInt(month) - 1;
             renderCalendar();
+        }
+    });
+}
+
+const reportMonthPicker = document.getElementById('report-month-picker');
+if (reportMonthPicker) {
+    reportMonthPicker.addEventListener('change', (e) => {
+        if (e.target.value) {
+            const [year, month] = e.target.value.split('-');
+            reportYear = parseInt(year);
+            reportMonth = parseInt(month) - 1;
+            renderReport();
         }
     });
 }

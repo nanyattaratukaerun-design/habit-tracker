@@ -82,7 +82,16 @@
 
             <!-- Report View -->
             <section id="view-report" class="view-section">
-                <h2 class="section-title">レポート</h2>
+                <div class="calendar-header"
+                    style="justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title" style="margin: 0;">レポート</h2>
+                    <div class="month-selector" style="position: relative;">
+                        <span id="report-month-display"></span>
+                        <i class="fas fa-chevron-down"></i>
+                        <input type="month" id="report-month-picker"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;">
+                    </div>
+                </div>
                 <div id="report-container">
                     <!-- Reports will be injected here -->
                 </div>
@@ -114,16 +123,6 @@
                 <div class="settings-group">
                     <h3 class="settings-group-title">演出</h3>
 
-                    <div class="settings-item">
-                        <div class="settings-item-info">
-                            <div class="settings-item-label">振動 (Haptic)</div>
-                            <div class="settings-item-desc">チェック時の振動フィードバック</div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="setting-haptic">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
 
                     <div class="settings-item">
                         <div class="settings-item-info">
